@@ -1,6 +1,6 @@
 import cv2
 import os
-from flask import Flask,request,render_template
+from flask import Flask, request, render_template, Response
 from datetime import date
 from datetime import datetime
 import numpy as np
@@ -11,18 +11,21 @@ import joblib
 #### Defining Flask App
 app = Flask(__name__)   
 
+# Global variables
+camera = None
+face_cascade = None
+face_detector = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+processing_frame = False
+register_face = False
+current_username = ""
+current_userid = ""
+required_sample_count = 50
+collected_samples = 0
+
 
 #### Saving Date today in 2 different formats
 datetoday = date.today().strftime("%m_%d_%y")
 datetoday2 = date.today().strftime("%d-%B-%Y")
-
-
-#### Initializing VideoCapture object to access WebCam
-face_detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-try:
-    cap = cv2.VideoCapture(1)
-except:
-    cap = cv2.VideoCapture(0)
 
 
 #### If these directories don't exist, create them
@@ -97,77 +100,136 @@ def add_attendance(name):
             f.write(f'\n{username},{userid},{current_time}')
 
 
-################## ROUTING FUNCTIONS #########################
+def generate_frames():
+    global camera, processing_frame, register_face, current_username, current_userid, collected_samples, required_sample_count
+    
+    if camera is None:
+        camera = cv2.VideoCapture(0)
+    
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+        
+        # Process the frame based on current mode
+        if processing_frame:
+            faces = extract_faces(frame)
+            if len(faces) > 0:
+                for (x, y, w, h) in faces:
+                    # Draw rectangle around face
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                    face = cv2.resize(frame[y:y+h, x:x+w], (50, 50))
+                    
+                    # Identify the face and show the name
+                    if 'face_recognition_model.pkl' in os.listdir('static'):
+                        identified_person = identify_face(face.reshape(1, -1))[0]
+                        user_name = identified_person.split('_')[0]
+                        cv2.putText(frame, f"User: {user_name}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                        add_attendance(identified_person)
+        
+        # Process registration
+        if register_face:
+            faces = extract_faces(frame)
+            if len(faces) > 0:
+                for (x, y, w, h) in faces:
+                    # Draw rectangle around face
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                    
+                    # Save the face
+                    if collected_samples < required_sample_count:
+                        face_img = frame[y:y+h, x:x+w]
+                        name = current_username + '_' + str(collected_samples) + '.jpg'
+                        userimagefolder = 'static/faces/'+current_username+'_'+str(current_userid)
+                        
+                        if not os.path.isdir(userimagefolder):
+                            os.makedirs(userimagefolder)
+                            
+                        cv2.imwrite(userimagefolder + '/' + name, face_img)
+                        collected_samples += 1
+                        
+                    # Display progress
+                    progress = int((collected_samples / required_sample_count) * 100)
+                    cv2.putText(frame, f"Progress: {progress}%", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+                    
+                    if collected_samples >= required_sample_count:
+                        register_face = False
+                        train_model()
+        
+        # Encode the frame to JPEG
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        
+        # Yield the frame in byte format
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 #### Our main page
 @app.route('/')
 def home():
-    names,rolls,times,l = extract_attendance()    
-    return render_template('home.html',names=names,rolls=rolls,times=times,l=l,totalreg=totalreg(),datetoday2=datetoday2) 
-
+    global camera, processing_frame, register_face
+    
+    # Reset camera state
+    processing_frame = False
+    register_face = False
+    
+    names, rolls, times, l = extract_attendance()    
+    return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(), datetoday2=datetoday2) 
 
 #### This function will run when we click on Take Attendance Button
 @app.route('/start', methods=['GET'])
 def start():
+    global camera, processing_frame, register_face
+    
     if 'face_recognition_model.pkl' not in os.listdir('static'):
-        return render_template('home.html', totalreg=totalreg(), datetoday2=datetoday2, mess='There is no trained model in the static folder. Please add a new face to continue.')
+        return render_template('home.html', totalreg=totalreg(), datetoday2=datetoday2, 
+                              mess='There is no trained model in the static folder. Please add a new face to continue.')
 
-    cap = cv2.VideoCapture(0)
-    ret = True
-    while ret:
-        ret, frame = cap.read()
-        faces = extract_faces(frame)  # Assuming this function returns a list of detected faces
-        if len(faces) > 0:  # Check if any faces were detected
-            (x, y, w, h) = faces[0]  # Accessing the first detected face (modify this according to your logic)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 20), 2)
-            face = cv2.resize(frame[y:y + h, x:x + w], (50, 50))
-            identified_person = identify_face(face.reshape(1, -1))[0]
-            add_attendance(identified_person)
-            cv2.putText(frame, f'{identified_person}', (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 20), 2,
-                        cv2.LINE_AA)
-        cv2.imshow('Attendance', frame)
-        if cv2.waitKey(1) == 27:
-            break
-    cap.release()
-    cv2.destroyAllWindows()
-    names, rolls, times, l = extract_attendance()
-    return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(),
-                           datetoday2=datetoday2)
-
-
+    # Set the processing mode
+    processing_frame = True
+    register_face = False
+    
+    # Return to a page that shows the camera feed
+    return render_template('video.html', mode="attendance")
 
 #### This function will run when we add a new user
-@app.route('/add',methods=['GET','POST'])
+@app.route('/add', methods=['GET', 'POST'])
 def add():
-    newusername = request.form['newusername']
-    newuserid = request.form['newuserid']
-    userimagefolder = 'static/faces/'+newusername+'_'+str(newuserid)
-    if not os.path.isdir(userimagefolder):
-        os.makedirs(userimagefolder)
-    cap = cv2.VideoCapture(0)
-    i,j = 0,0
-    while 1:
-        _,frame = cap.read()
-        faces = extract_faces(frame)
-        for (x,y,w,h) in faces:
-            cv2.rectangle(frame,(x, y), (x+w, y+h), (255, 0, 20), 2)
-            cv2.putText(frame,f'Images Captured: {i}/50',(30,30),cv2.FONT_HERSHEY_SIMPLEX,1,(255, 0, 20),2,cv2.LINE_AA)
-            if j%10==0:
-                name = newusername+'_'+str(i)+'.jpg'
-                cv2.imwrite(userimagefolder+'/'+name,frame[y:y+h,x:x+w])
-                i+=1
-            j+=1
-        if j==500:
-            break
-        cv2.imshow('Adding new User',frame)
-        if cv2.waitKey(1)==27:
-            break
-    cap.release()
-    cv2.destroyAllWindows()
-    print('Training Model')
-    train_model()
-    names,rolls,times,l = extract_attendance()    
-    return render_template('home.html',names=names,rolls=rolls,times=times,l=l,totalreg=totalreg(),datetoday2=datetoday2) 
+    global camera, processing_frame, register_face, current_username, current_userid, collected_samples
+    
+    current_username = request.form['newusername']
+    current_userid = request.form['newuserid']
+    
+    # Reset counters
+    collected_samples = 0
+    
+    # Set the processing mode
+    processing_frame = False
+    register_face = True
+    
+    # Return to a page that shows the camera feed
+    return render_template('video.html', mode="registration", username=current_username)
+
+@app.route('/stop', methods=['GET'])
+def stop():
+    global camera, processing_frame, register_face
+    
+    # Stop processing
+    processing_frame = False
+    register_face = False
+    
+    # Release camera
+    if camera is not None:
+        camera.release()
+        camera = None
+    
+    # Return to home page with updated attendance
+    names, rolls, times, l = extract_attendance()
+    return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(),
+                        datetoday2=datetoday2, mess='Processing completed successfully')
 
 
 #### Our main function which runs the Flask App
