@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if mode == "registration" %}Registration - {{ username }}{% else %}Attendance{% endif %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .camera-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-feed {
+            width: 100%;
+            max-width: 640px;
+            border: 3px solid #007bff;
+            border-radius: 5px;
+        }
+
+        .btn-container {
+            margin-top: 20px;
+        }
+
+        h2 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        .instructions {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="camera-container">
+            <h2>
+                {% if mode == "registration" %}
+                Registration: {{ username }}
+                {% else %}
+                Taking Attendance
+                {% endif %}
+            </h2>
+
+            <div class="instructions">
+                {% if mode == "registration" %}
+                <p><strong>Instructions:</strong></p>
+                <ul>
+                    <li>Position your face in the center of the frame</li>
+                    <li>The system will take multiple photos automatically</li>
+                    <li>Try to move your head slightly between captures for better results</li>
+                    <li>Wait until the progress reaches 100%</li>
+                </ul>
+                {% else %}
+                <p><strong>Instructions:</strong></p>
+                <ul>
+                    <li>Position your face in the center of the frame</li>
+                    <li>The system will recognize your face and mark attendance</li>
+                    <li>When done, click "Finish" to return to the home page</li>
+                </ul>
+                {% endif %}
+            </div>
+
+            <div>
+                <img src="{{ url_for('video_feed') }}" class="video-feed">
+            </div>
+
+            <div class="btn-container">
+                <a href="{{ url_for('stop') }}" class="btn btn-primary">Finish</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+
+</html>
