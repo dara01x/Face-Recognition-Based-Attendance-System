@@ -1,6 +1,6 @@
 import cv2
 import os
-from flask import Flask, request, render_template, Response
+from flask import Flask, request, render_template, Response, jsonify
 from datetime import date
 from datetime import datetime
 import numpy as np
@@ -26,6 +26,11 @@ collected_samples = 0
 #### Saving Date today in 2 different formats
 datetoday = date.today().strftime("%m_%d_%y")
 datetoday2 = date.today().strftime("%d-%B-%Y")
+
+# Message status codes
+SUCCESS_MESSAGE = "success"
+ERROR_MESSAGE = "error"
+WARNING_MESSAGE = "warning"
 
 
 #### If these directories don't exist, create them
@@ -113,6 +118,13 @@ def add_attendance(name):
     if int(userid) not in list(df['Roll']):
         with open(f'Attendance/Attendance-{datetoday}.csv','a') as f:
             f.write(f'\n{username},{userid},{current_time}')
+
+
+@app.route('/progress')
+def get_progress():
+    global collected_samples, required_sample_count
+    progress = int((collected_samples / required_sample_count) * 100)
+    return jsonify({'progress': progress, 'samples': collected_samples})
 
 
 def generate_frames():
