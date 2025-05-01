@@ -5,50 +5,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if mode == "registration" %}Registration - {{ username }}{% else %}Attendance{% endif %}</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+        }
+
         body {
-            background-color: #f8f9fa;
-            padding: 20px;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            color: var(--dark-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .camera-container {
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: 900px;
+            margin: 2rem auto;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            padding: 30px;
             text-align: center;
+            overflow: hidden;
+            animation: fadeIn 0.8s;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h2 {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .page-header h2::after {
+            content: '';
+            position: absolute;
+            width: 50%;
+            height: 4px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            bottom: -8px;
+            left: 25%;
+        }
+
+        .subtitle {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        .video-wrapper {
+            position: relative;
+            margin: 1.5rem auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            max-width: 640px;
+            background-color: #000;
         }
 
         .video-feed {
             width: 100%;
-            max-width: 640px;
-            border: 3px solid #007bff;
-            border-radius: 5px;
+            max-width: 100%;
+            border-radius: 15px;
+            display: block;
         }
 
         .btn-container {
-            margin-top: 20px;
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
         }
 
-        h2 {
-            color: #007bff;
-            margin-bottom: 20px;
+        .btn {
+            border-radius: 30px;
+            padding: 12px 30px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            transform: translateY(-3px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f72585, #b5179e);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #b5179e, #f72585);
+            transform: translateY(-3px);
+        }
+
+        .btn i {
+            margin-right: 8px;
         }
 
         .instructions {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #e9ecef;
-            border-radius: 5px;
+            background: linear-gradient(to right, rgba(76, 201, 240, 0.1), rgba(67, 97, 238, 0.1));
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
             text-align: left;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .instructions h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .instructions ul {
+            padding-left: 1.5rem;
+            margin-bottom: 0;
+        }
+
+        .instructions li {
+            margin-bottom: 0.5rem;
         }
 
         .camera-guide {
             position: relative;
             display: inline-block;
+            width: 100%;
         }
 
         .optimal-zone {
@@ -58,72 +166,212 @@
             transform: translate(-50%, -50%);
             width: 250px;
             height: 300px;
-            border: 2px dashed rgba(0, 123, 255, 0.5);
+            border: 3px dashed rgba(76, 201, 240, 0.7);
             border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(76, 201, 240, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .progress-container {
+            margin-top: 1.5rem;
+        }
+
+        .progress {
+            height: 20px;
+            border-radius: 10px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            background-color: rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+            box-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+            transition: width 0.3s ease;
         }
 
         .sample-count {
-            color: #007bff;
-            font-weight: bold;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 201, 240, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(76, 201, 240, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(76, 201, 240, 0);
+            }
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge.recording {
+            background-color: rgba(247, 37, 133, 0.9);
+            color: white;
+            animation: blink 1.5s infinite;
+        }
+
+        .status-badge.attendance {
+            background-color: rgba(76, 201, 240, 0.9);
+            color: white;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="camera-container">
-            <h2>
-                {% if mode == "registration" %}
-                Registration: {{ username }}
-                {% else %}
-                Taking Attendance
-                {% endif %}
-            </h2>
+    <div class="camera-container animate__animated animate__fadeIn">
+        <div class="page-header">
+            {% if mode == "registration" %}
+            <h2>Face Registration</h2>
+            <p class="subtitle">Registering new user: <strong>{{ username }}</strong></p>
+            {% else %}
+            <h2>Attendance Mode</h2>
+            <p class="subtitle">Recognizing registered users</p>
+            {% endif %}
+        </div>
 
-            <div class="instructions">
-                {% if mode == "registration" %}
-                <p><strong>Instructions for Best Results:</strong></p>
-                <ul>
-                    <li>Position your face within the oval guide on screen</li>
-                    <li>Keep a distance of 50-70cm (1.5-2 feet) from camera</li>
-                    <li>The system will capture <span class="sample-count">100 images</span> automatically</li>
-                    <li>Slowly move your head in different directions between captures:
-                        <ul>
-                            <li>Look slightly up, down, left and right</li>
-                            <li>Make subtle expressions (neutral, slight smile)</li>
-                            <li>Slowly turn your head about 15° to each side</li>
-                        </ul>
-                    </li>
-                    <li>The process will take longer than usual to ensure better accuracy</li>
-                    <li>Wait until the progress reaches 100%</li>
-                </ul>
-                {% else %}
-                <p><strong>Instructions for Recognition:</strong></p>
-                <ul>
-                    <li>Position your face within the oval guide</li>
-                    <li>Keep a distance of 50-70cm (1.5-2 feet) from camera</li>
-                    <li>Ensure adequate lighting on your face</li>
-                    <li>Hold steady for a moment until recognized</li>
-                    <li>When done, click "Finish" to return to the home page</li>
-                </ul>
-                {% endif %}
+        {% if mode == "registration" %}
+        <div class="instructions">
+            <h4><i class="fas fa-info-circle"></i> Registration Instructions</h4>
+            <ul>
+                <li>Please position your face within the outlined area</li>
+                <li>Ensure good lighting for better recognition</li>
+                <li>Slightly move your face in different angles</li>
+                <li>Wait until the progress bar reaches 100%</li>
+                <li>Keep your face visible at all times</li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="video-wrapper">
+            {% if mode == "registration" %}
+            <div class="status-badge recording">
+                <i class="fas fa-record-vinyl"></i> Recording
             </div>
+            {% else %}
+            <div class="status-badge attendance">
+                <i class="fas fa-check-circle"></i> Attendance Mode
+            </div>
+            {% endif %}
 
             <div class="camera-guide">
                 <img src="{{ url_for('video_feed') }}" class="video-feed">
+                {% if mode == "registration" %}
                 <div class="optimal-zone"></div>
+                {% endif %}
             </div>
+        </div>
 
-            <div class="btn-container">
-                <a href="{{ url_for('stop') }}" class="btn btn-primary">Finish</a>
+        {% if mode == "registration" %}
+        <div class="progress-container">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 0%" id="captureProgress" aria-valuenow="0"
+                    aria-valuemin="0" aria-valuemax="100"></div>
             </div>
+            <div class="sample-count mt-2">
+                Collecting samples... <span id="sampleCount">0</span>/100
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="btn-container">
+            <a href="/" class="btn btn-danger">
+                <i class="fas fa-times-circle"></i> Cancel
+            </a>
+            {% if mode != "registration" %}
+            <a href="/stop" class="btn btn-primary">
+                <i class="fas fa-check-circle"></i> Complete
+            </a>
+            {% endif %}
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% if mode == "registration" %}
+    <script>
+        // Use AJAX to fetch real-time progress from the backend
+        function updateProgressFromServer() {
+            $.ajax({
+                url: '/progress',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    // Update progress bar and sample count with actual data from camera processing
+                    const progress = data.progress;
+                    const samples = data.samples;
+
+                    $('#captureProgress').css('width', progress + '%');
+                    $('#captureProgress').attr('aria-valuenow', progress);
+                    $('#sampleCount').text(samples);
+
+                    // Continue polling if not complete
+                    if (progress < 100) {
+                        setTimeout(updateProgressFromServer, 250); // Poll every 250ms
+                    } else {
+                        // Registration complete
+                        setTimeout(function () {
+                            window.location.href = '/';
+                        }, 1000);
+                    }
+                },
+                error: function () {
+                    // On error, try again after a short delay
+                    setTimeout(updateProgressFromServer, 500);
+                }
+            });
+        }
+
+        // Start polling for progress updates
+        $(document).ready(function () {
+            setTimeout(updateProgressFromServer, 1000);
+        });
+    </script>
+    {% endif %}
 </body>
 
 </html>
