@@ -40,10 +40,35 @@
 
         .instructions {
             margin: 20px 0;
-            padding: 10px;
+            padding: 15px;
             background-color: #e9ecef;
             border-radius: 5px;
             text-align: left;
+        }
+
+        .camera-guide {
+            position: relative;
+            display: inline-block;
+        }
+
+        .optimal-zone {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 300px;
+            border: 2px dashed rgba(0, 123, 255, 0.5);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            pointer-events: none;
+        }
+
+        .lighting-tips {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -61,25 +86,42 @@
 
             <div class="instructions">
                 {% if mode == "registration" %}
-                <p><strong>Instructions:</strong></p>
+                <p><strong>Instructions for Best Results:</strong></p>
                 <ul>
-                    <li>Position your face in the center of the frame</li>
-                    <li>The system will take multiple photos automatically</li>
-                    <li>Try to move your head slightly between captures for better results</li>
+                    <li>Position your face within the oval guide on screen</li>
+                    <li>Keep a distance of 50-70cm (1.5-2 feet) from camera</li>
+                    <li>The system will capture multiple images automatically</li>
+                    <li>Slowly move your head in different directions between captures:
+                        <ul>
+                            <li>Look slightly up, down, left and right</li>
+                            <li>Make subtle expressions (neutral, slight smile)</li>
+                        </ul>
+                    </li>
                     <li>Wait until the progress reaches 100%</li>
                 </ul>
+                <div class="lighting-tips">
+                    <strong>Lighting Tips:</strong>
+                    <ul>
+                        <li>Ensure your face is well-lit from the front</li>
+                        <li>Avoid strong backlighting (like sitting with a window behind you)</li>
+                        <li>If using in low light, turn on additional room lighting if possible</li>
+                    </ul>
+                </div>
                 {% else %}
-                <p><strong>Instructions:</strong></p>
+                <p><strong>Instructions for Recognition:</strong></p>
                 <ul>
-                    <li>Position your face in the center of the frame</li>
-                    <li>The system will recognize your face and mark attendance</li>
+                    <li>Position your face within the oval guide</li>
+                    <li>Keep a distance of 50-70cm (1.5-2 feet) from camera</li>
+                    <li>Ensure adequate lighting on your face</li>
+                    <li>Hold steady for a moment until recognized</li>
                     <li>When done, click "Finish" to return to the home page</li>
                 </ul>
                 {% endif %}
             </div>
 
-            <div>
+            <div class="camera-guide">
                 <img src="{{ url_for('video_feed') }}" class="video-feed">
+                <div class="optimal-zone"></div>
             </div>
 
             <div class="btn-container">
