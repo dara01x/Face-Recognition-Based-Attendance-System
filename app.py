@@ -27,6 +27,11 @@ collected_samples = 0
 datetoday = date.today().strftime("%m_%d_%y")
 datetoday2 = date.today().strftime("%d-%B-%Y")
 
+# Message status codes
+SUCCESS_MESSAGE = "success"
+ERROR_MESSAGE = "error"
+WARNING_MESSAGE = "warning"
+
 
 #### If these directories don't exist, create them
 if not os.path.isdir('Attendance'):

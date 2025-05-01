@@ -175,6 +175,11 @@
             color: var(--warning-color);
         }
 
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
         .empty-state {
             padding: 2rem;
             text-align: center;
@@ -239,8 +244,11 @@
         </div>
 
         {% if mess %}
-        <div class="alert alert-danger text-center animate__animated animate__fadeIn" role="alert">
-            <i class="fas fa-exclamation-circle"></i> {{ mess }}
+        <div class="alert {% if 'success' in mess.lower() %}alert-success{% else %}alert-danger{% endif %} text-center animate__animated animate__fadeIn"
+            role="alert">
+            <i
+                class="fas {% if 'success' in mess.lower() %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+            {{ mess }}
         </div>
         {% endif %}
 
