@@ -19,7 +19,7 @@ processing_frame = False
 register_face = False
 current_username = ""
 current_userid = ""
-required_sample_count = 50
+required_sample_count = 100
 collected_samples = 0
 
 
@@ -47,9 +47,24 @@ def totalreg():
 
 #### extract the face from an image
 def extract_faces(img):
-    if img.size != 0:  # Replace the condition here
+    if img.size != 0:  # Check if image is valid
+        # Convert to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        face_points = face_detector.detectMultiScale(gray, 1.3, 5)
+        
+        # Apply image enhancements for better face detection
+        # Histogram equalization to improve contrast
+        gray = cv2.equalizeHist(gray)
+        
+        # Apply slight Gaussian blur to reduce noise
+        gray = cv2.GaussianBlur(gray, (5, 5), 0)
+        
+        # Detect faces with slightly more sensitive parameters for lower quality cameras
+        face_points = face_detector.detectMultiScale(
+            gray, 
+            scaleFactor=1.2,  # Reduced from 1.3 for better detection
+            minNeighbors=4,   # Reduced from 5 to be less strict
+            minSize=(30, 30)  # Minimum face size to detect
+        )
         return face_points
     else:
         return []
