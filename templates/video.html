@@ -63,12 +63,9 @@
             pointer-events: none;
         }
 
-        .lighting-tips {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            margin-bottom: 15px;
+        .sample-count {
+            color: #007bff;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -90,23 +87,17 @@
                 <ul>
                     <li>Position your face within the oval guide on screen</li>
                     <li>Keep a distance of 50-70cm (1.5-2 feet) from camera</li>
-                    <li>The system will capture multiple images automatically</li>
+                    <li>The system will capture <span class="sample-count">100 images</span> automatically</li>
                     <li>Slowly move your head in different directions between captures:
                         <ul>
                             <li>Look slightly up, down, left and right</li>
                             <li>Make subtle expressions (neutral, slight smile)</li>
+                            <li>Slowly turn your head about 15° to each side</li>
                         </ul>
                     </li>
+                    <li>The process will take longer than usual to ensure better accuracy</li>
                     <li>Wait until the progress reaches 100%</li>
                 </ul>
-                <div class="lighting-tips">
-                    <strong>Lighting Tips:</strong>
-                    <ul>
-                        <li>Ensure your face is well-lit from the front</li>
-                        <li>Avoid strong backlighting (like sitting with a window behind you)</li>
-                        <li>If using in low light, turn on additional room lighting if possible</li>
-                    </ul>
-                </div>
                 {% else %}
                 <p><strong>Instructions for Recognition:</strong></p>
                 <ul>
