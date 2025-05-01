@@ -131,7 +131,11 @@ def generate_frames():
     global camera, processing_frame, register_face, current_username, current_userid, collected_samples, required_sample_count
     
     if camera is None:
-        camera = cv2.VideoCapture(0)
+        # Instead of the default webcam
+        # cap = cv2.VideoCapture(0)
+
+        # For iVCam (it typically registers as a camera device)
+        camera = cv2.VideoCapture(1)  # Try index 1, or 2, 3 if not working
     
     while True:
         success, frame = camera.read()
