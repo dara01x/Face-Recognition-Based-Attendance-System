@@ -298,7 +298,7 @@
             {% endif %}
 
             <div class="camera-guide">
-                <img src="{{ url_for('video_feed') }}" class="video-feed">
+                <img src="{{ url_for('routes.video_feed') }}" class="video-feed">
                 {% if mode == "registration" %}
                 <div class="optimal-zone"></div>
                 {% endif %}
@@ -318,11 +318,11 @@
         {% endif %}
 
         <div class="btn-container">
-            <a href="/" class="btn btn-danger">
+            <a href="{{ url_for('routes.home') }}" class="btn btn-danger">
                 <i class="fas fa-times-circle"></i> Cancel
             </a>
             {% if mode != "registration" %}
-            <a href="/stop" class="btn btn-primary">
+            <a href="{{ url_for('routes.stop') }}" class="btn btn-primary">
                 <i class="fas fa-check-circle"></i> Complete
             </a>
             {% endif %}
@@ -337,7 +337,7 @@
         // Use AJAX to fetch real-time progress from the backend
         function updateProgressFromServer() {
             $.ajax({
-                url: '/progress',
+                url: "{{ url_for('routes.get_progress') }}",
                 type: 'GET',
                 dataType: 'json',
                 success: function (data) {
