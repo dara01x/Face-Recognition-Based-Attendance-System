@@ -115,6 +115,16 @@
             transform: translateY(-3px);
         }
 
+        .btn-success {
+            background: linear-gradient(135deg, #20bf55, #01baef);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #01baef, #20bf55);
+            transform: translateY(-3px);
+        }
+
         .btn-danger {
             background: linear-gradient(135deg, #f72585, #b5179e);
             border: none;
@@ -199,6 +209,16 @@
             font-size: 1.1rem;
         }
 
+        .scanning-status {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-top: 1rem;
+            padding: 8px 15px;
+            background-color: rgba(76, 201, 240, 0.1);
+            border-radius: 10px;
+            display: inline-block;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -242,6 +262,11 @@
             animation: blink 1.5s infinite;
         }
 
+        .status-badge.preparing {
+            background-color: rgba(255, 183, 3, 0.9);
+            color: white;
+        }
+
         .status-badge.attendance {
             background-color: rgba(76, 201, 240, 0.9);
             color: white;
@@ -257,6 +282,35 @@
             50% {
                 opacity: 0.6;
             }
+        }
+
+        /* Countdown overlay */
+        .countdown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .countdown-overlay.active {
+            opacity: 1;
+        }
+
+        .countdown-number {
+            font-size: 10rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 0 20px rgba(76, 201, 240, 0.8);
+            animation: pulse 1s infinite;
         }
     </style>
 </head>
@@ -277,19 +331,20 @@
         <div class="instructions">
             <h4><i class="fas fa-info-circle"></i> Registration Instructions</h4>
             <ul>
-                <li>Please position your face within the outlined area</li>
+                <li>Position your face within the outlined area</li>
                 <li>Ensure good lighting for better recognition</li>
-                <li>Slightly move your face in different angles</li>
+                <li>When you're ready, click the "Ready to Scan" button</li>
+                <li>Keep your face visible throughout the scanning process</li>
+                <li>Slightly move your face in different angles when prompted</li>
                 <li>Wait until the progress bar reaches 100%</li>
-                <li>Keep your face visible at all times</li>
             </ul>
         </div>
         {% endif %}
 
         <div class="video-wrapper">
             {% if mode == "registration" %}
-            <div class="status-badge recording">
-                <i class="fas fa-record-vinyl"></i> Recording
+            <div class="status-badge preparing" id="statusBadge">
+                <i class="fas fa-user-check"></i> Preparing
             </div>
             {% else %}
             <div class="status-badge attendance">
@@ -301,12 +356,20 @@
                 <img src="{{ url_for('routes.video_feed') }}" class="video-feed">
                 {% if mode == "registration" %}
                 <div class="optimal-zone"></div>
+                <!-- Countdown overlay for starting scan -->
+                <div class="countdown-overlay" id="countdownOverlay">
+                    <div class="countdown-number" id="countdownNumber">3</div>
+                </div>
                 {% endif %}
             </div>
         </div>
 
         {% if mode == "registration" %}
-        <div class="progress-container">
+        <div class="scanning-status" id="scanningStatus">
+            <i class="fas fa-user-check"></i> Please position your face and click "Ready to Scan" when you're ready
+        </div>
+
+        <div class="progress-container" id="progressContainer" style="display: none;">
             <div class="progress">
                 <div class="progress-bar" role="progressbar" style="width: 0%" id="captureProgress" aria-valuenow="0"
                     aria-valuemin="0" aria-valuemax="100"></div>
@@ -321,7 +384,11 @@
             <a href="{{ url_for('routes.home') }}" class="btn btn-danger">
                 <i class="fas fa-times-circle"></i> Cancel
             </a>
-            {% if mode != "registration" %}
+            {% if mode == "registration" %}
+            <button id="startScanBtn" class="btn btn-success">
+                <i class="fas fa-camera"></i> Ready to Scan
+            </button>
+            {% else %}
             <a href="{{ url_for('routes.stop') }}" class="btn btn-primary">
                 <i class="fas fa-check-circle"></i> Complete
             </a>
@@ -334,8 +401,14 @@
 
     {% if mode == "registration" %}
     <script>
+        let scanStarted = false;
+        let countdown;
+        let countdownVal = 3;
+
         // Use AJAX to fetch real-time progress from the backend
         function updateProgressFromServer() {
+            if (!scanStarted) return; // Only update progress if scan has started
+
             $.ajax({
                 url: "{{ url_for('routes.get_progress') }}",
                 type: 'GET',
@@ -354,9 +427,12 @@
                         setTimeout(updateProgressFromServer, 250); // Poll every 250ms
                     } else {
                         // Registration complete
+                        $('#scanningStatus').html('<i class="fas fa-check-circle"></i> Registration complete! Redirecting...');
+                        $('#scanningStatus').css('color', 'green');
+
                         setTimeout(function () {
                             window.location.href = '/';
-                        }, 1000);
+                        }, 2000);
                     }
                 },
                 error: function () {
@@ -366,10 +442,74 @@
             });
         }
 
-        // Start polling for progress updates
+        // Function to start the scan with countdown
+        function startScanWithCountdown() {
+            // Show countdown overlay
+            $('#countdownOverlay').addClass('active');
+
+            // Start countdown
+            countdownVal = 3;
+            $('#countdownNumber').text(countdownVal);
+
+            // Update countdown every second
+            countdown = setInterval(function () {
+                countdownVal--;
+                $('#countdownNumber').text(countdownVal);
+
+                if (countdownVal <= 0) {
+                    // End countdown
+                    clearInterval(countdown);
+
+                    // Hide countdown overlay
+                    $('#countdownOverlay').removeClass('active');
+
+                    // Start the actual scan
+                    startScan();
+                }
+            }, 1000);
+        }
+
+        // Function to start the scan
+        function startScan() {
+            // Send AJAX request to start scanning
+            $.ajax({
+                url: "{{ url_for('routes.start_scan') }}",
+                type: 'POST',
+                dataType: 'json',
+                success: function (response) {
+                    // Update UI to reflect scanning state
+                    scanStarted = true;
+                    $('#startScanBtn').prop('disabled', true);
+                    $('#startScanBtn').html('<i class="fas fa-spinner fa-spin"></i> Scanning...');
+                    $('#statusBadge').removeClass('preparing').addClass('recording');
+                    $('#statusBadge').html('<i class="fas fa-record-vinyl"></i> Recording');
+                    $('#scanningStatus').html('<i class="fas fa-camera"></i> Scanning in progress...');
+                    $('#progressContainer').show();
+
+                    // Start progress updates
+                    updateProgressFromServer();
+                },
+                error: function () {
+                    alert('Error starting scan. Please try again.');
+                    $('#startScanBtn').prop('disabled', false);
+                }
+            });
+        }
+
+        // Button click handler for "Ready to Scan"
         $(document).ready(function () {
-            setTimeout(updateProgressFromServer, 1000);
+            $('#startScanBtn').click(function () {
+                $(this).prop('disabled', true);
+                $(this).html('<i class="fas fa-spinner fa-spin"></i> Preparing...');
+
+                // Start countdown before scanning
+                startScanWithCountdown();
+            });
         });
+    </script>
+    {% else %}
+    <script>
+        // Attendance mode code
     </script>
     {% endif %}
 </body>

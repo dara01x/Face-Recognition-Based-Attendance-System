@@ -14,6 +14,7 @@ routes = Blueprint('routes', __name__)
 # Processing state variables
 processing_frame = False
 register_face = False
+scan_ready = False  # New state variable to track if user is ready to scan
 current_username = ""
 current_userid = ""
 required_sample_count = 100
@@ -28,7 +29,7 @@ def get_progress():
     return jsonify({'progress': progress, 'samples': collected_samples})
 
 def generate_frames():
-    global processing_frame, register_face, current_username, current_userid, collected_samples, required_sample_count, identified_users
+    global processing_frame, register_face, scan_ready, current_username, current_userid, collected_samples, required_sample_count, identified_users
     
     camera = get_camera()
     
@@ -54,8 +55,8 @@ def generate_frames():
                         # Store identified person in the set instead of adding attendance immediately
                         identified_users.add(identified_person)
         
-        # Process registration
-        if register_face:
+        # Process registration, but only if scan_ready is True
+        if register_face and scan_ready:
             faces = extract_faces(frame)
             if len(faces) > 0:
                 for (x, y, w, h) in faces:
@@ -80,7 +81,17 @@ def generate_frames():
                     
                     if collected_samples >= required_sample_count:
                         register_face = False
+                        scan_ready = False
                         train_model()
+        # For registration mode but not yet ready to scan, just show the face detection
+        elif register_face and not scan_ready:
+            faces = extract_faces(frame)
+            if len(faces) > 0:
+                for (x, y, w, h) in faces:
+                    # Draw rectangle around face with different color to indicate not recording yet
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 120, 255), 2)
+                    cv2.putText(frame, "Position your face and press 'Ready to Scan'", (x, y-10), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 120, 255), 2)
         
         # Encode the frame to JPEG
         ret, buffer = cv2.imencode('.jpg', frame)
@@ -147,7 +158,7 @@ def start():
 
 @routes.route('/add', methods=['GET', 'POST'])
 def add():
-    global processing_frame, register_face, current_username, current_userid, collected_samples
+    global processing_frame, register_face, scan_ready, current_username, current_userid, collected_samples
     
     current_username = request.form['newusername']
     current_userid = request.form['newuserid']
@@ -155,12 +166,26 @@ def add():
     # Reset counters
     collected_samples = 0
     
-    # Set the processing mode
+    # Set the processing mode to registration but not ready to scan yet
     processing_frame = False
     register_face = True
+    scan_ready = False  # Initialize as not ready to scan
     
-    # Return to a page that shows the camera feed
+    # Return to a page that shows the camera feed with the ready to scan button
     return render_template('video.html', mode="registration", username=current_username)
+
+@routes.route('/start_scan', methods=['POST'])
+def start_scan():
+    """Start scanning after user presses the Ready to Scan button"""
+    global scan_ready
+    
+    # Set scan_ready to True to begin capturing faces
+    scan_ready = True
+    
+    return jsonify({
+        'status': SUCCESS_MESSAGE,
+        'message': 'Scanning started'
+    })
 
 @routes.route('/stop', methods=['GET'])
 def stop():
