@@ -18,6 +18,8 @@ current_username = ""
 current_userid = ""
 required_sample_count = 100
 collected_samples = 0
+# Store identified users temporarily
+identified_users = set()
 
 @routes.route('/progress')
 def get_progress():
@@ -26,7 +28,7 @@ def get_progress():
     return jsonify({'progress': progress, 'samples': collected_samples})
 
 def generate_frames():
-    global processing_frame, register_face, current_username, current_userid, collected_samples, required_sample_count
+    global processing_frame, register_face, current_username, current_userid, collected_samples, required_sample_count, identified_users
     
     camera = get_camera()
     
@@ -49,7 +51,8 @@ def generate_frames():
                         identified_person = identify_face(face.reshape(1, -1))[0]
                         user_name = identified_person.split('_')[0]
                         cv2.putText(frame, f"User: {user_name}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-                        add_attendance(identified_person)
+                        # Store identified person in the set instead of adding attendance immediately
+                        identified_users.add(identified_person)
         
         # Process registration
         if register_face:
@@ -114,18 +117,20 @@ def switch_camera(source):
 
 @routes.route('/')
 def home():
-    global processing_frame, register_face
+    global processing_frame, register_face, identified_users
     
     # Reset camera state
     processing_frame = False
     register_face = False
+    # Reset identified users when returning to home
+    identified_users = set()
     
     names, rolls, times, l = extract_attendance()    
     return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(), datetoday2=datetoday2) 
 
 @routes.route('/start', methods=['GET'])
 def start():
-    global processing_frame, register_face
+    global processing_frame, register_face, identified_users
     
     if 'face_recognition_model.pkl' not in os.listdir('src/static/models'):
         return render_template('home.html', totalreg=totalreg(), datetoday2=datetoday2, 
@@ -134,6 +139,8 @@ def start():
     # Set the processing mode
     processing_frame = True
     register_face = False
+    # Reset identified users when starting attendance
+    identified_users = set()
     
     # Return to a page that shows the camera feed
     return render_template('video.html', mode="attendance")
@@ -157,11 +164,18 @@ def add():
 
 @routes.route('/stop', methods=['GET'])
 def stop():
-    global processing_frame, register_face
+    global processing_frame, register_face, identified_users
     
     # Stop processing
     processing_frame = False
     register_face = False
+    
+    # Add all identified users to attendance
+    for user in identified_users:
+        add_attendance(user)
+    
+    # Clear the set after processing
+    identified_users = set()
     
     # Release camera
     release_camera()
