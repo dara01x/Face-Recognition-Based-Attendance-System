@@ -243,6 +243,26 @@
             </div>
         </div>
 
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card animate__animated animate__fadeIn">
+                    <div class="card-header">
+                        <h2><i class="fas fa-camera"></i> Camera Selection</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-around">
+                            <button id="built-in-camera" class="btn btn-primary" onclick="switchCamera(0)">
+                                <i class="fas fa-laptop"></i> Built-in Camera
+                            </button>
+                            <button id="ivcam-camera" class="btn btn-outline-primary" onclick="switchCamera(1)">
+                                <i class="fas fa-mobile-alt"></i> iVCam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {% if mess %}
         <div class="alert {% if 'success' in mess.lower() %}alert-success{% else %}alert-danger{% endif %} text-center animate__animated animate__fadeIn"
             role="alert">
@@ -339,6 +359,64 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function switchCamera(cameraIndex) {
+            fetch(`/switch_camera/${cameraIndex}`, {
+                method: 'GET'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Update button styles based on selected camera
+                    if (cameraIndex === 0) {
+                        document.getElementById('built-in-camera').className = 'btn btn-primary';
+                        document.getElementById('ivcam-camera').className = 'btn btn-outline-primary';
+                    } else {
+                        document.getElementById('built-in-camera').className = 'btn btn-outline-primary';
+                        document.getElementById('ivcam-camera').className = 'btn btn-primary';
+                    }
+
+                    // Show message about camera change
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success text-center animate__animated animate__fadeIn';
+                    alertDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${data.message}`;
+
+                    // Remove any existing alerts
+                    const existingAlerts = document.querySelectorAll('.alert');
+                    existingAlerts.forEach(alert => alert.remove());
+
+                    // Insert new alert after page header
+                    const pageHeader = document.querySelector('.page-header');
+                    pageHeader.after(alertDiv);
+
+                    // Auto remove the alert after 3 seconds
+                    setTimeout(() => {
+                        alertDiv.classList.add('animate__fadeOut');
+                        setTimeout(() => alertDiv.remove(), 500);
+                    }, 3000);
+                })
+                .catch(error => {
+                    console.error('Error switching camera:', error);
+                });
+        }
+
+        // Set initial camera button state based on server setting
+        window.onload = function () {
+            fetch('/get_camera_source', {
+                method: 'GET'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const cameraIndex = data.camera_source;
+                    if (cameraIndex === 0) {
+                        document.getElementById('built-in-camera').className = 'btn btn-primary';
+                        document.getElementById('ivcam-camera').className = 'btn btn-outline-primary';
+                    } else {
+                        document.getElementById('built-in-camera').className = 'btn btn-outline-primary';
+                        document.getElementById('ivcam-camera').className = 'btn btn-primary';
+                    }
+                });
+        };
+    </script>
 </body>
 
 </html>

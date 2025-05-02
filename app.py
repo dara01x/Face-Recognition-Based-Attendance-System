@@ -21,7 +21,24 @@ current_username = ""
 current_userid = ""
 required_sample_count = 100
 collected_samples = 0
+camera_source = 0  # Default: 0 for built-in webcam, 1 for iVCam
 
+# Function to check available cameras and set appropriate source
+def check_camera_sources():
+    available_cameras = []
+    for i in range(3):  # Check first 3 camera indices
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                available_cameras.append(i)
+            cap.release()
+    return available_cameras
+
+# Check available cameras on startup
+available_cameras = check_camera_sources()
+if available_cameras:
+    camera_source = available_cameras[0]  # Default to first available camera
 
 #### Saving Date today in 2 different formats
 datetoday = date.today().strftime("%m_%d_%y")
@@ -128,14 +145,10 @@ def get_progress():
 
 
 def generate_frames():
-    global camera, processing_frame, register_face, current_username, current_userid, collected_samples, required_sample_count
+    global camera, processing_frame, register_face, current_username, current_userid, collected_samples, required_sample_count, camera_source
     
     if camera is None:
-        # Instead of the default webcam
-        # cap = cv2.VideoCapture(0)
-
-        # For iVCam (it typically registers as a camera device)
-        camera = cv2.VideoCapture(1)  # Try index 1, or 2, 3 if not working
+        camera = cv2.VideoCapture(camera_source)  # Use selected camera source
     
     while True:
         success, frame = camera.read()
@@ -197,6 +210,53 @@ def generate_frames():
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/get_camera_source')
+def get_camera_source():
+    global camera_source
+    return jsonify({'camera_source': camera_source})
+
+@app.route('/switch_camera/<int:source>')
+def switch_camera(source):
+    global camera, camera_source
+    
+    # Only accept valid camera sources (0 or 1)
+    if source not in [0, 1]:
+        return jsonify({'status': ERROR_MESSAGE, 'message': 'Invalid camera source'})
+    
+    # Release existing camera if it exists
+    if camera is not None:
+        camera.release()
+        camera = None
+    
+    # Set the new camera source
+    camera_source = source
+    
+    # Immediately initialize the new camera to test it
+    test_cam = cv2.VideoCapture(camera_source)
+    if not test_cam.isOpened():
+        # If requested camera is not available, try to find an available one
+        available_cameras = check_camera_sources()
+        if available_cameras:
+            camera_source = available_cameras[0]
+            message = f"Requested camera not available. Using camera {camera_source} instead."
+        else:
+            message = "No cameras available. Please connect a camera."
+        test_cam.release()
+    else:
+        # Properly initialize the camera right away
+        ret, frame = test_cam.read()
+        test_cam.release()
+        
+        # Initialize our global camera with the new source
+        camera = cv2.VideoCapture(camera_source)
+        
+        if camera_source == 0:
+            message = "Switched to built-in laptop camera"
+        else:
+            message = "Switched to iVCam"
+    
+    return jsonify({'status': SUCCESS_MESSAGE, 'message': message})
 
 #### Our main page
 @app.route('/')
