@@ -13,21 +13,23 @@ WARNING_MESSAGE = "warning"
 
 def ensure_directories():
     """Ensure all required directories exist"""
-    if not os.path.isdir('Attendance'):
-        os.makedirs('Attendance')
-    if not os.path.isdir('static'):
-        os.makedirs('static')
-    if not os.path.isdir('static/faces'):
-        os.makedirs('static/faces')
+    if not os.path.isdir('data/Attendance'):
+        os.makedirs('data/Attendance')
+    if not os.path.isdir('src/static'):
+        os.makedirs('src/static')
+    if not os.path.isdir('src/static/faces'):
+        os.makedirs('src/static/faces')
+    if not os.path.isdir('src/static/models'):
+        os.makedirs('src/static/models')
     
     # Create today's attendance file if it doesn't exist
-    if f'Attendance-{datetoday}.csv' not in os.listdir('Attendance'):
-        with open(f'Attendance/Attendance-{datetoday}.csv','w') as f:
+    if f'Attendance-{datetoday}.csv' not in os.listdir('data/Attendance'):
+        with open(f'data/Attendance/Attendance-{datetoday}.csv','w') as f:
             f.write('Name,Roll,Time')
 
 def extract_attendance():
     """Extract info from today's attendance file"""
-    df = pd.read_csv(f'Attendance/Attendance-{datetoday}.csv')
+    df = pd.read_csv(f'data/Attendance/Attendance-{datetoday}.csv')
     names = df['Name']
     rolls = df['Roll']
     times = df['Time']
@@ -40,7 +42,7 @@ def add_attendance(name):
     userid = name.split('_')[1]
     current_time = datetime.now().strftime("%H:%M:%S")
     
-    df = pd.read_csv(f'Attendance/Attendance-{datetoday}.csv')
+    df = pd.read_csv(f'data/Attendance/Attendance-{datetoday}.csv')
     if int(userid) not in list(df['Roll']):
-        with open(f'Attendance/Attendance-{datetoday}.csv','a') as f:
+        with open(f'data/Attendance/Attendance-{datetoday}.csv','a') as f:
             f.write(f'\n{username},{userid},{current_time}')

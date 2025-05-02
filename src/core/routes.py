@@ -4,9 +4,9 @@ from flask import Blueprint, render_template, Response, request, jsonify
 from datetime import datetime
 
 # Import from our modules
-from models import extract_faces, identify_face, train_model, totalreg
-from camera import camera, camera_source, initialize_camera, get_camera, release_camera, check_camera_sources
-from utils import datetoday, datetoday2, extract_attendance, add_attendance, SUCCESS_MESSAGE, ERROR_MESSAGE
+from src.core.models import extract_faces, identify_face, train_model, totalreg
+from src.core.camera import camera, camera_source, initialize_camera, get_camera, release_camera, check_camera_sources
+from src.core.utils import datetoday, datetoday2, extract_attendance, add_attendance, SUCCESS_MESSAGE, ERROR_MESSAGE
 
 # Blueprint for organizing routes
 routes = Blueprint('routes', __name__)
@@ -45,7 +45,7 @@ def generate_frames():
                     face = cv2.resize(frame[y:y+h, x:x+w], (50, 50))
                     
                     # Identify the face and show the name
-                    if 'face_recognition_model.pkl' in os.listdir('static'):
+                    if 'face_recognition_model.pkl' in os.listdir('src/static/models'):
                         identified_person = identify_face(face.reshape(1, -1))[0]
                         user_name = identified_person.split('_')[0]
                         cv2.putText(frame, f"User: {user_name}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
@@ -63,7 +63,7 @@ def generate_frames():
                     if collected_samples < required_sample_count:
                         face_img = frame[y:y+h, x:x+w]
                         name = current_username + '_' + str(collected_samples) + '.jpg'
-                        userimagefolder = 'static/faces/'+current_username+'_'+str(current_userid)
+                        userimagefolder = 'src/static/faces/'+current_username+'_'+str(current_userid)
                         
                         if not os.path.isdir(userimagefolder):
                             os.makedirs(userimagefolder)
@@ -127,7 +127,7 @@ def home():
 def start():
     global processing_frame, register_face
     
-    if 'face_recognition_model.pkl' not in os.listdir('static'):
+    if 'face_recognition_model.pkl' not in os.listdir('src/static/models'):
         return render_template('home.html', totalreg=totalreg(), datetoday2=datetoday2, 
                               mess='There is no trained model in the static folder. Please add a new face to continue.')
 

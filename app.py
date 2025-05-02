@@ -1,10 +1,12 @@
 from flask import Flask
-from routes import routes
-from utils import ensure_directories
-from camera import check_camera_sources, initialize_camera
+from src.core.routes import routes
+from src.core.utils import ensure_directories
+from src.core.camera import check_camera_sources, initialize_camera
 
 # Create the Flask application
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder='src/templates',
+            static_folder='src/static')
 
 # Register the routes blueprint
 app.register_blueprint(routes)

@@ -33,25 +33,25 @@ def extract_faces(img):
 
 def identify_face(facearray):
     """Identify a face using the trained ML model"""
-    model = joblib.load('static/face_recognition_model.pkl')
+    model = joblib.load('src/static/models/face_recognition_model.pkl')
     return model.predict(facearray)
 
 def train_model():
     """Train the KNN model on all faces in the faces folder"""
     faces = []
     labels = []
-    userlist = os.listdir('static/faces')
+    userlist = os.listdir('src/static/faces')
     for user in userlist:
-        for imgname in os.listdir(f'static/faces/{user}'):
-            img = cv2.imread(f'static/faces/{user}/{imgname}')
+        for imgname in os.listdir(f'src/static/faces/{user}'):
+            img = cv2.imread(f'src/static/faces/{user}/{imgname}')
             resized_face = cv2.resize(img, (50, 50))
             faces.append(resized_face.ravel())
             labels.append(user)
     faces = np.array(faces)
     knn = KNeighborsClassifier(n_neighbors=5)
     knn.fit(faces, labels)
-    joblib.dump(knn, 'static/face_recognition_model.pkl')
+    joblib.dump(knn, 'src/static/models/face_recognition_model.pkl')
 
 def totalreg():
     """Get the total number of registered users"""
-    return len(os.listdir('static/faces'))
+    return len(os.listdir('src/static/faces'))
