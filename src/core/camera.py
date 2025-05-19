@@ -6,11 +6,12 @@ camera_source = 0  # Default: 0 for built-in webcam, 1 for iVCam
 
 def check_camera_sources():
     """Check available camera sources and return a list of working camera indices"""
+    # Optimized: Only check two most common camera indices (0=built-in, 1=external)
     available_cameras = []
-    for i in range(3):  # Check first 3 camera indices
+    for i in range(2):
         cap = cv2.VideoCapture(i)
         if cap.isOpened():
-            ret, frame = cap.read()
+            ret, _ = cap.read()
             if ret:
                 available_cameras.append(i)
             cap.release()
@@ -29,29 +30,24 @@ def initialize_camera(source=None):
         camera.release()
         camera = None
     
-    # Check if the requested camera is available
-    test_cam = cv2.VideoCapture(camera_source)
-    if not test_cam.isOpened():
-        # If requested camera is not available, try to find an available one
-        available_cameras = check_camera_sources()
-        if available_cameras:
-            camera_source = available_cameras[0]
-            message = f"Requested camera not available. Using camera {camera_source} instead."
-        else:
-            message = "No cameras available. Please connect a camera."
-            test_cam.release()
-            return False, message
-    
-    test_cam.release()
-    
     # Initialize the camera with the selected source
     camera = cv2.VideoCapture(camera_source)
     
-    if camera_source == 0:
-        message = "Using built-in laptop camera"
-    else:
-        message = "Using iVCam"
+    # Check if camera opened successfully
+    if not camera.isOpened():
+        # Try the alternative camera
+        alt_source = 1 if camera_source == 0 else 0
+        camera = cv2.VideoCapture(alt_source)
+        
+        if camera.isOpened():
+            camera_source = alt_source
+            message = f"Switched to camera {camera_source}"
+            return True, message
+        else:
+            message = "No cameras available. Please connect a camera."
+            return False, message
     
+    message = f"Using camera {camera_source}"
     return True, message
 
 def get_camera():

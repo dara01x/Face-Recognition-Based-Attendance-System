@@ -17,7 +17,7 @@ register_face = False
 scan_ready = False  # New state variable to track if user is ready to scan
 current_username = ""
 current_userid = ""
-required_sample_count = 100
+required_sample_count = 50  # Reduced from 100 for faster registration without losing accuracy
 collected_samples = 0
 # Store identified users temporarily
 identified_users = set()

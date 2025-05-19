@@ -13,19 +13,12 @@ def extract_faces(img):
         # Convert to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        # Apply image enhancements for better face detection
-        # Histogram equalization to improve contrast
-        gray = cv2.equalizeHist(gray)
-        
-        # Apply slight Gaussian blur to reduce noise
-        gray = cv2.GaussianBlur(gray, (5, 5), 0)
-        
-        # Detect faces with slightly more sensitive parameters for lower quality cameras
+        # Detect faces
         face_points = face_detector.detectMultiScale(
             gray, 
-            scaleFactor=1.2,  # Reduced from 1.3 for better detection
-            minNeighbors=4,   # Reduced from 5 to be less strict
-            minSize=(30, 30)  # Minimum face size to detect
+            scaleFactor=1.2,
+            minNeighbors=4,
+            minSize=(30, 30)
         )
         return face_points
     else:
@@ -42,11 +35,20 @@ def train_model():
     labels = []
     userlist = os.listdir('src/static/faces')
     for user in userlist:
-        for imgname in os.listdir(f'src/static/faces/{user}'):
-            img = cv2.imread(f'src/static/faces/{user}/{imgname}')
+        # Get all image paths for this user
+        image_paths = [f'src/static/faces/{user}/{img}' for img in os.listdir(f'src/static/faces/{user}')]
+        
+        # If there are many samples, use only a subset for training
+        if len(image_paths) > 30:
+            # Use every other image to reduce training set size while maintaining variety
+            image_paths = image_paths[::2]
+            
+        for img_path in image_paths:
+            img = cv2.imread(img_path)
             resized_face = cv2.resize(img, (50, 50))
             faces.append(resized_face.ravel())
             labels.append(user)
+            
     faces = np.array(faces)
     knn = KNeighborsClassifier(n_neighbors=5)
     knn.fit(faces, labels)
