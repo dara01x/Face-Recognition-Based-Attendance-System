@@ -8,9 +8,6 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 *An intelligent attendance management system using real-time face recognition technology*
-
-[Features](#features) • [Installation](#installation) • [Usage](#usage) • [API](#api) • [Contributing](#contributing)
-
 </div>
 
 ---
