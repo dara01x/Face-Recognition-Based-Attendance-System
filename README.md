@@ -298,20 +298,6 @@ python -c "import cv2; print([i for i in range(10) if cv2.VideoCapture(i).read()
 
 ## 🔄 Development
 
-### Project Structure
-```
-src/
-├── core/
-│   ├── camera.py          # Camera management and operations
-│   ├── models.py          # ML models and face processing
-│   ├── routes.py          # Flask routes and API endpoints
-│   └── utils.py           # Utility functions and helpers
-├── static/
-│   ├── css/               # Stylesheets
-│   ├── faces/             # User face images
-│   └── models/            # Trained ML models
-└── templates/             # HTML templates
-```
 
 ### Adding New Features
 1. **Create feature branch**
@@ -375,40 +361,17 @@ style: format code
 test: add tests
 ```
 
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **OpenCV Community**: For excellent computer vision tools
-- **scikit-learn Team**: For machine learning algorithms
-- **Flask Community**: For the web framework
-- **Bootstrap Team**: For the UI framework
-
----
 
 ## 📞 Support
 
 ### Getting Help
-- 📧 Email: support@example.com
-- 💬 Discord: [Join our server](https://discord.gg/example)
-- 📱 GitHub Issues: [Report bugs](https://github.com/yourusername/face-recognition-attendance-system/issues)
+- 📧 Email: daramistefa30@gmail.com
+- 📱 GitHub Issues: [Report bugs](https://github.com/dara01x)
 
-### Documentation
-- 📖 [User Guide](docs/user-guide.md)
-- 🔧 [API Documentation](docs/api.md)
-- 🎓 [Developer Guide](docs/developer-guide.md)
 
 ---
 
 <div align="center">
-
-**Built with ❤️ using Python, Flask, and OpenCV**
 
 *Star ⭐ this repository if you found it helpful!*
 
